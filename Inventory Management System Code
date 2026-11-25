@@ -1,0 +1,337 @@
+?variant="standard" id="58321"}
+```java
+import java.util.*;
+
+class Product {
+    int id;
+    String name;
+    String category;
+    double price;
+    int quantity;
+    int reorderLevel;
+
+    Product(int id, String name, String category,
+            double price, int quantity, int reorderLevel) {
+
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.price = price;
+        this.quantity = quantity;
+        this.reorderLevel = reorderLevel;
+    }
+
+    void display() {
+        System.out.println("--------------------------------");
+        System.out.println("Product ID: " + id);
+        System.out.println("Name: " + name);
+        System.out.println("Category: " + category);
+        System.out.println("Price: Rs." + price);
+        System.out.println("Quantity: " + quantity);
+        System.out.println("Reorder Level: " + reorderLevel);
+
+        if (quantity <= reorderLevel) {
+            System.out.println("Status: LOW STOCK");
+        } else {
+            System.out.println("Status: IN STOCK");
+        }
+    }
+}
+
+class StockOrder {
+    int productId;
+    int quantity;
+
+    StockOrder(int productId, int quantity) {
+        this.productId = productId;
+        this.quantity = quantity;
+    }
+}
+
+public class InventoryManagementSystem {
+
+    static ArrayList<Product> products = new ArrayList<>();
+
+    static HashMap<Integer, Product> productMap = new HashMap<>();
+
+    static Queue<StockOrder> orderQueue = new LinkedList<>();
+
+    static Scanner sc = new Scanner(System.in);
+
+    // Add Product
+    static void addProduct() {
+
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+        sc.nextLine();
+
+        if (productMap.containsKey(id)) {
+            System.out.println("Product ID already exists!");
+            return;
+        }
+
+        System.out.print("Enter Product Name: ");
+        String name = sc.nextLine();
+
+        System.out.print("Enter Category: ");
+        String category = sc.nextLine();
+
+        System.out.print("Enter Price: ");
+        double price = sc.nextDouble();
+
+        System.out.print("Enter Quantity: ");
+        int quantity = sc.nextInt();
+
+        System.out.print("Enter Reorder Level: ");
+        int reorderLevel = sc.nextInt();
+
+        if (price < 0 || quantity < 0 || reorderLevel < 0) {
+            System.out.println("Invalid input!");
+            return;
+        }
+
+        Product p = new Product(
+            id, name, category, price, quantity, reorderLevel
+        );
+
+        products.add(p);
+        productMap.put(id, p);
+
+        System.out.println("Product Added Successfully!");
+    }
+
+    // View All Products
+    static void viewProducts() {
+
+        if (products.isEmpty()) {
+            System.out.println("Inventory is Empty!");
+            return;
+        }
+
+        for (Product p : products) {
+            p.display();
+        }
+    }
+
+    // Search Product
+    static void searchProduct() {
+
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+
+        Product p = productMap.get(id);
+
+        if (p != null) {
+            p.display();
+        } else {
+            System.out.println("Product Not Found!");
+        }
+    }
+
+    // Update Stock
+    static void updateStock() {
+
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+
+        Product p = productMap.get(id);
+
+        if (p == null) {
+            System.out.println("Product Not Found!");
+            return;
+        }
+
+        System.out.print("Enter New Quantity: ");
+        int quantity = sc.nextInt();
+
+        if (quantity < 0) {
+            System.out.println("Quantity cannot be negative!");
+            return;
+        }
+
+        p.quantity = quantity;
+
+        System.out.println("Stock Updated Successfully!");
+    }
+
+    // Delete Product
+    static void deleteProduct() {
+
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+
+        Product p = productMap.remove(id);
+
+        if (p != null) {
+            products.remove(p);
+            System.out.println("Product Deleted Successfully!");
+        } else {
+            System.out.println("Product Not Found!");
+        }
+    }
+
+    // Sort Products by Price
+    static void sortProducts() {
+
+        products.sort(
+            Comparator.comparingDouble(p -> p.price)
+        );
+
+        System.out.println("Products Sorted By Price!");
+
+        viewProducts();
+    }
+
+    // Place Stock Order
+    static void placeOrder() {
+
+        System.out.print("Enter Product ID: ");
+        int id = sc.nextInt();
+
+        if (!productMap.containsKey(id)) {
+            System.out.println("Product Not Found!");
+            return;
+        }
+
+        System.out.print("Enter Order Quantity: ");
+        int quantity = sc.nextInt();
+
+        if (quantity <= 0) {
+            System.out.println("Invalid Order Quantity!");
+            return;
+        }
+
+        orderQueue.offer(new StockOrder(id, quantity));
+
+        System.out.println("Order Added To Queue!");
+    }
+
+    // Process Next Order
+    static void processOrder() {
+
+        if (orderQueue.isEmpty()) {
+            System.out.println("No Pending Orders!");
+            return;
+        }
+
+        StockOrder order = orderQueue.poll();
+
+        Product p = productMap.get(order.productId);
+
+        if (p == null) {
+            System.out.println("Product no longer exists!");
+            return;
+        }
+
+        if (p.quantity >= order.quantity) {
+
+            p.quantity -= order.quantity;
+
+            System.out.println("Order Processed Successfully!");
+            System.out.println("Remaining Stock: " + p.quantity);
+
+        } else {
+
+            System.out.println("Insufficient Stock!");
+            System.out.println("Available Quantity: " + p.quantity);
+        }
+    }
+
+    // Low Stock Alert
+    static void lowStockAlert() {
+
+        boolean found = false;
+
+        for (Product p : products) {
+
+            if (p.quantity <= p.reorderLevel) {
+
+                p.display();
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No Low Stock Products!");
+        }
+    }
+
+    // Main Menu
+    public static void main(String[] args) {
+
+        int choice;
+
+        do {
+
+            System.out.println("\n================================");
+            System.out.println(" INVENTORY MANAGEMENT SYSTEM");
+            System.out.println("================================");
+
+            System.out.println("1. Add Product");
+            System.out.println("2. View All Products");
+            System.out.println("3. Search Product");
+            System.out.println("4. Update Stock");
+            System.out.println("5. Delete Product");
+            System.out.println("6. Sort Products By Price");
+            System.out.println("7. Place Stock Order");
+            System.out.println("8. Process Next Order");
+            System.out.println("9. Low Stock Alert");
+            System.out.println("10. Exit");
+
+            System.out.print("\nEnter Your Choice: ");
+
+            choice = sc.nextInt();
+
+            switch (choice) {
+
+                case 1:
+                    addProduct();
+                    break;
+
+                case 2:
+                    viewProducts();
+                    break;
+
+                case 3:
+                    searchProduct();
+                    break;
+
+                case 4:
+                    updateStock();
+                    break;
+
+                case 5:
+                    deleteProduct();
+                    break;
+
+                case 6:
+                    sortProducts();
+                    break;
+
+                case 7:
+                    placeOrder();
+                    break;
+
+                case 8:
+                    processOrder();
+                    break;
+
+                case 9:
+                    lowStockAlert();
+                    break;
+
+                case 10:
+                    System.out.println("Thank You!");
+                    System.out.println("Exiting System...");
+                    break;
+
+                default:
+                    System.out.println("Invalid Choice!");
+            }
+
+        } while (choice != 10);
+
+        sc.close();
+    }
+}
+```
